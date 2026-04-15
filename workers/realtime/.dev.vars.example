@@ -1,0 +1,2 @@
+# Copy to workers/realtime/.dev.vars (gitignored). Must match Pages Functions AUTH_JWT_SECRET.
+AUTH_JWT_SECRET=

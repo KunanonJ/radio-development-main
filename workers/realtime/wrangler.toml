@@ -1,0 +1,18 @@
+# WebSocket + Durable Object for live VU + remote control.
+# Deploy: `npm run realtime:deploy` from repo root (requires wrangler login).
+# Local: `npm run realtime:dev` — set AUTH_JWT_SECRET in workers/realtime/.dev.vars (copy from .dev.vars.example).
+
+name = "sonic-bloom-realtime"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+
+[[durable_objects.bindings]]
+name = "STATION"
+class_name = "StationRoom"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["StationRoom"]
+
+[observability]
+enabled = true

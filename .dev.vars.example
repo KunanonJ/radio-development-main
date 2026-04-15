@@ -1,0 +1,20 @@
+# Copy to .dev.vars for local Pages Functions secrets (not committed).
+# wrangler pages dev loads .dev.vars automatically.
+#
+# Workers Builds / CI: set CLOUDFLARE_API_TOKEN in the Cloudflare project (not in this file).
+# See docs/CLOUDFLARE_WORKERS_BUILDS.md — token needs Account → Cloudflare Pages → Edit.
+#
+# UAT / local API: run `npm run db:migrate:local` once, then `npm run pages:dev`
+# (Vite on 8080 proxies /api to wrangler on 8788 — see vite.config.ts).
+#
+# Optional — Cloudflare Access JWT enforcement on /api/* (omit for local open APIs):
+# ACCESS_TEAM_DOMAIN=https://yourteam.cloudflareaccess.com
+# ACCESS_POLICY_AUD=<application_audience_tag_from_zero_trust>
+#
+# App login (username/password) — HS256 secret for session cookie + Bearer JWT; enables /api protection when set:
+# AUTH_JWT_SECRET=generate-a-long-random-string
+#
+# After deploying workers/realtime (`npm run realtime:deploy`), set the Worker wss origin so POST /api/realtime/token returns wsUrl:
+# REALTIME_WS_URL=wss://sonic-bloom-realtime.<account>.workers.dev
+#
+# EXAMPLE_SECRET=dev-only-value
