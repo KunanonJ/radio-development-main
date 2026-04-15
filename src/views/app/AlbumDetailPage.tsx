@@ -8,6 +8,7 @@ import { AlbumCard } from '@/components/AlbumCard';
 import { usePlayerStore } from '@/lib/store';
 import { shuffleArray } from '@/lib/utils';
 import { Play, Shuffle } from 'lucide-react';
+import { ArtworkImage } from '@/components/ArtworkImage';
 
 export default function AlbumDetailPage() {
   const { t } = useTranslation();
@@ -32,10 +33,13 @@ export default function AlbumDetailPage() {
   return (
     <div className="app-page">
       <div className="flex gap-8 mb-8">
-        <img
+        <ArtworkImage
           src={resolved.artwork}
           alt={resolved.title}
+          width={224}
+          height={224}
           className="w-56 h-56 rounded-xl object-cover shadow-2xl"
+          priority
         />
         <div className="flex flex-col justify-end">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">

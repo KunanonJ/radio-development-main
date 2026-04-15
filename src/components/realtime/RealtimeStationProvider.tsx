@@ -22,6 +22,7 @@ import {
   setRealtimeProgramVuSink,
 } from "@/lib/realtime-program-vu";
 import { useLocalBroadcastStore } from "@/lib/local-broadcast-store";
+import { devLogWarn } from "@/lib/dev-log";
 
 const RECONNECT_MS_MAX = 30_000;
 const PING_MS = 25_000;
@@ -286,7 +287,7 @@ export function RealtimeStationProvider(props: RealtimeStationProviderProps) {
           setLastError(msg);
           setConnection("error");
           teardownEmitters();
-          console.warn("[realtime] connect failed", e);
+          devLogWarn("[realtime] connect failed", e);
           if (stoppedRef.current) return;
           const attempt = reconnectAttemptRef.current + 1;
           reconnectAttemptRef.current = attempt;

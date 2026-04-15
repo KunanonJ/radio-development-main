@@ -142,68 +142,68 @@ export function SettingsPlayback() {
           </div>
           <Switch checked={autoResumePlayback} onCheckedChange={setAutoResumePlayback} />
         </div>
+      </div>
 
-        <div className="surface-2 rounded-xl border border-border p-5 space-y-4">
-          <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-semibold text-foreground">
-              {t("settings.playback.sectionRealtime")}
-            </h3>
-          </div>
-          <p className="text-sm text-muted-foreground">{t("settings.playback.realtimeIntro")}</p>
-          {!realtime?.configured ? (
-            <p className="text-sm text-muted-foreground">{t("settings.playback.realtimeDisabled")}</p>
-          ) : (
-            <div className="space-y-3 text-sm">
-              <div className="flex flex-wrap gap-x-6 gap-y-1">
-                <span className="text-muted-foreground">{t("settings.playback.realtimeConnection")}</span>
-                <span className="font-mono text-foreground">{realtime.connection}</span>
-              </div>
-              {realtime.role ? (
-                <div className="flex flex-wrap gap-x-6 gap-y-1">
-                  <span className="text-muted-foreground">{t("settings.playback.realtimeRole")}</span>
-                  <span className="font-mono text-foreground">{realtime.role}</span>
-                </div>
-              ) : null}
-              {realtime.clientId ? (
-                <div className="flex flex-wrap gap-x-6 gap-y-1">
-                  <span className="text-muted-foreground">{t("settings.playback.realtimeClientId")}</span>
-                  <span className="font-mono text-xs text-foreground break-all">{realtime.clientId}</span>
-                </div>
-              ) : null}
-              {realtime.lastError ? (
-                <p className="text-destructive text-xs break-words">
-                  {t("settings.playback.realtimeError")}: {realtime.lastError}
-                </p>
-              ) : null}
-              {realtime.remoteVu ? (
-                <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
-                  <p className="text-xs text-muted-foreground">{t("settings.playback.realtimeVuHint")}</p>
-                  <div className="flex items-end gap-1 h-8">
-                    <div
-                      className="w-2 rounded-sm bg-primary/90 transition-[height] duration-75"
-                      style={{ height: `${Math.max(10, realtime.remoteVu.peak * 100)}%` }}
-                    />
-                    <div
-                      className="w-2 rounded-sm bg-primary/50 transition-[height] duration-75"
-                      style={{ height: `${Math.max(10, realtime.remoteVu.rms * 100)}%` }}
-                    />
-                  </div>
-                </div>
-              ) : null}
-              {(realtime.role === "operator" || realtime.role === "admin") && realtime.connection === "connected" ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => realtime.sendCommand({ action: "pause" })}
-                >
-                  {t("settings.playback.realtimeTestPause")}
-                </Button>
-              ) : null}
-            </div>
-          )}
+      <div className="surface-2 rounded-xl border border-border p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <Activity className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-semibold text-foreground">
+            {t("settings.playback.sectionRealtime")}
+          </h3>
         </div>
+        <p className="text-sm text-muted-foreground">{t("settings.playback.realtimeIntro")}</p>
+        {!realtime?.configured ? (
+          <p className="text-sm text-muted-foreground">{t("settings.playback.realtimeDisabled")}</p>
+        ) : (
+          <div className="space-y-3 text-sm">
+            <div className="flex flex-wrap gap-x-6 gap-y-1">
+              <span className="text-muted-foreground">{t("settings.playback.realtimeConnection")}</span>
+              <span className="font-mono text-foreground">{realtime.connection}</span>
+            </div>
+            {realtime.role ? (
+              <div className="flex flex-wrap gap-x-6 gap-y-1">
+                <span className="text-muted-foreground">{t("settings.playback.realtimeRole")}</span>
+                <span className="font-mono text-foreground">{realtime.role}</span>
+              </div>
+            ) : null}
+            {realtime.clientId ? (
+              <div className="flex flex-wrap gap-x-6 gap-y-1">
+                <span className="text-muted-foreground">{t("settings.playback.realtimeClientId")}</span>
+                <span className="font-mono text-xs text-foreground break-all">{realtime.clientId}</span>
+              </div>
+            ) : null}
+            {realtime.lastError ? (
+              <p className="text-destructive text-xs break-words">
+                {t("settings.playback.realtimeError")}: {realtime.lastError}
+              </p>
+            ) : null}
+            {realtime.remoteVu ? (
+              <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+                <p className="text-xs text-muted-foreground">{t("settings.playback.realtimeVuHint")}</p>
+                <div className="flex items-end gap-1 h-8">
+                  <div
+                    className="w-2 rounded-sm bg-primary/90 transition-[height] duration-75"
+                    style={{ height: `${Math.max(10, realtime.remoteVu.peak * 100)}%` }}
+                  />
+                  <div
+                    className="w-2 rounded-sm bg-primary/50 transition-[height] duration-75"
+                    style={{ height: `${Math.max(10, realtime.remoteVu.rms * 100)}%` }}
+                  />
+                </div>
+              </div>
+            ) : null}
+            {(realtime.role === "operator" || realtime.role === "admin") && realtime.connection === "connected" ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => realtime.sendCommand({ action: "pause" })}
+              >
+                {t("settings.playback.realtimeTestPause")}
+              </Button>
+            ) : null}
+          </div>
+        )}
       </div>
     </div>
   );

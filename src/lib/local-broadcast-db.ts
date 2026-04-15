@@ -6,6 +6,7 @@ import type {
   MicSettings,
   PlaybackRoutingSettings,
 } from '@/lib/types';
+import { devLogError } from '@/lib/dev-log';
 
 const DB_NAME = 'sonic-bloom-local-broadcast';
 const DB_VERSION = 1;
@@ -90,7 +91,7 @@ async function openDb(): Promise<IDBDatabase | null> {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error ?? new Error('Failed to open IndexedDB'));
   }).catch((error) => {
-    console.error('broadcast-db open failed', error);
+    devLogError('broadcast-db open failed', error);
     return null;
   });
 

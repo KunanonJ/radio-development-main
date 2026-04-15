@@ -7,6 +7,7 @@ import { isPlaybackEnded, usePlayerStore } from '@/lib/store';
 import { Play, Pause } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { TrackActionsMenu } from '@/components/track/TrackActionsMenu';
+import { ArtworkImage } from '@/components/ArtworkImage';
 
 interface TrackRowProps {
   track: Track;
@@ -116,11 +117,12 @@ export function TrackRow({
         )}
       </div>
 
-      <img
+      <ArtworkImage
         src={track.artwork}
         alt=""
+        width={40}
+        height={40}
         className="w-10 h-10 rounded object-cover flex-shrink-0"
-        loading="lazy"
       />
 
       <div className="flex-1 min-w-0">

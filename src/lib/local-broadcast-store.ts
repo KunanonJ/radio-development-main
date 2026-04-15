@@ -12,6 +12,7 @@ import type {
   Track,
 } from '@/lib/types';
 import { usePlayerStore } from '@/lib/store';
+import { devLogError } from '@/lib/dev-log';
 
 const LOCAL_ARTWORK = '/placeholder.svg';
 const CART_COLORS = [
@@ -332,7 +333,7 @@ export const useLocalBroadcastStore = create<LocalBroadcastState>((set, get) => 
 
       await get().refreshInputDevices();
     } catch (error) {
-      console.error('broadcast hydrate failed', error);
+      devLogError('broadcast hydrate failed', error);
       set({
         hydrated: true,
         hydrating: false,
@@ -554,7 +555,7 @@ export const useLocalBroadcastStore = create<LocalBroadcastState>((set, get) => 
         }));
       set({ canEnumerateDevices: true, availableInputDevices: inputs });
     } catch (error) {
-      console.error('enumerateDevices failed', error);
+      devLogError('enumerateDevices failed', error);
       set({
         canEnumerateDevices: false,
         availableInputDevices: [],
