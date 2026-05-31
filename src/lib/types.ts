@@ -180,3 +180,55 @@ export interface MicSettings {
   preferredSampleRate: 44100 | 48000;
   enabled: boolean;
 }
+
+export interface LowResourceSettings {
+  enabled: boolean;
+  reduceMotion: boolean;
+  simpleSurfaces: boolean;
+  vuFps: 10 | 15 | 30;
+  importBatchSize: number;
+  skipImportDurationScan: boolean;
+  stableAudioBufferFrames: 512 | 1024 | 2048;
+  suspendBackgroundWorkOnAir: boolean;
+}
+
+export type StreamingPlatform = 'youtube' | 'facebook' | 'custom-rtmp';
+export type StreamingProtocol = 'rtmp' | 'rtmps';
+export type StreamingStatus = 'idle' | 'starting' | 'live' | 'error';
+
+export interface StreamingTarget {
+  id: string;
+  name: string;
+  platform: StreamingPlatform;
+  serverUrl: string;
+  streamKey: string;
+  enabled: boolean;
+  protocol: StreamingProtocol;
+  audioBitrateKbps: 96 | 128 | 160 | 192 | 256 | 320;
+  videoMode: 'audio-slate';
+  status: StreamingStatus;
+  lastError: string | null;
+  updatedAt: string;
+}
+
+export type SoftwareUpdateChannel = 'stable' | 'beta';
+export type SoftwareUpdateStatus =
+  | 'idle'
+  | 'checking'
+  | 'up-to-date'
+  | 'available'
+  | 'downloading'
+  | 'ready-to-restart'
+  | 'error'
+  | 'unavailable';
+
+export interface SoftwareUpdateSettings {
+  autoCheckEnabled: boolean;
+  autoDownloadAndInstall: boolean;
+  channel: SoftwareUpdateChannel;
+  lastCheckedAt: string | null;
+  lastAvailableVersion: string | null;
+  lastInstalledVersion: string | null;
+  status: SoftwareUpdateStatus;
+  lastError: string | null;
+}

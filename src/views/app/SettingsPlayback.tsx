@@ -20,7 +20,9 @@ export function SettingsPlayback() {
   const { t } = useTranslation();
   const realtime = useRealtimeStationOptional();
   const playbackSettings = useLocalBroadcastStore((state) => state.playbackSettings);
+  const lowResourceSettings = useLocalBroadcastStore((state) => state.lowResourceSettings);
   const setPlaybackSettings = useLocalBroadcastStore((state) => state.setPlaybackSettings);
+  const setLowResourceSettings = useLocalBroadcastStore((state) => state.setLowResourceSettings);
   const stopPreview = useLocalBroadcastStore((state) => state.stopPreview);
   const autoResumePlayback = usePlayerStore((state) => state.autoResumePlayback);
   const setAutoResumePlayback = usePlayerStore((state) => state.setAutoResumePlayback);
@@ -141,6 +143,139 @@ export function SettingsPlayback() {
             </p>
           </div>
           <Switch checked={autoResumePlayback} onCheckedChange={setAutoResumePlayback} />
+        </div>
+      </div>
+
+      <div className="surface-2 rounded-xl border border-border p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <Activity className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-semibold text-foreground">Low-resource mode</h3>
+        </div>
+
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted/20 p-4">
+          <div>
+            <p className="text-sm font-medium text-foreground">Station performance preset</p>
+            <p className="text-xs text-muted-foreground">
+              Larger buffers, simpler UI rendering, throttled meters, and paused imports while on-air.
+            </p>
+          </div>
+          <Switch
+            checked={lowResourceSettings.enabled}
+            onCheckedChange={(enabled) => void setLowResourceSettings({ enabled })}
+          />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">VU rate</label>
+            <Select
+              value={String(lowResourceSettings.vuFps)}
+              onValueChange={(value) =>
+                void setLowResourceSettings({ vuFps: Number(value) as 10 | 15 | 30 })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10 fps</SelectItem>
+                <SelectItem value="15">15 fps</SelectItem>
+                <SelectItem value="30">30 fps</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Import batch</label>
+            <Select
+              value={String(lowResourceSettings.importBatchSize)}
+              onValueChange={(value) =>
+                void setLowResourceSettings({ importBatchSize: Number(value) })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="4">4 files</SelectItem>
+                <SelectItem value="8">8 files</SelectItem>
+                <SelectItem value="16">16 files</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Stable buffer</label>
+            <Select
+              value={String(lowResourceSettings.stableAudioBufferFrames)}
+              onValueChange={(value) =>
+                void setLowResourceSettings({
+                  stableAudioBufferFrames: Number(value) as 512 | 1024 | 2048,
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="512">512 frames</SelectItem>
+                <SelectItem value="1024">1024 frames</SelectItem>
+                <SelectItem value="2048">2048 frames</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted/20 p-4">
+            <span>
+              <span className="block text-sm font-medium text-foreground">Simple surfaces</span>
+              <span className="block text-xs text-muted-foreground">Disable blur and glow styling.</span>
+            </span>
+            <Switch
+              checked={lowResourceSettings.simpleSurfaces}
+              onCheckedChange={(simpleSurfaces) =>
+                void setLowResourceSettings({ simpleSurfaces })
+              }
+            />
+          </label>
+
+          <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted/20 p-4">
+            <span>
+              <span className="block text-sm font-medium text-foreground">Reduced motion</span>
+              <span className="block text-xs text-muted-foreground">Minimize transitions and animations.</span>
+            </span>
+            <Switch
+              checked={lowResourceSettings.reduceMotion}
+              onCheckedChange={(reduceMotion) => void setLowResourceSettings({ reduceMotion })}
+            />
+          </label>
+
+          <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted/20 p-4">
+            <span>
+              <span className="block text-sm font-medium text-foreground">Fast import metadata</span>
+              <span className="block text-xs text-muted-foreground">Skip browser duration probing.</span>
+            </span>
+            <Switch
+              checked={lowResourceSettings.skipImportDurationScan}
+              onCheckedChange={(skipImportDurationScan) =>
+                void setLowResourceSettings({ skipImportDurationScan })
+              }
+            />
+          </label>
+
+          <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted/20 p-4">
+            <span>
+              <span className="block text-sm font-medium text-foreground">Pause imports on-air</span>
+              <span className="block text-xs text-muted-foreground">Protect playback on slow disks.</span>
+            </span>
+            <Switch
+              checked={lowResourceSettings.suspendBackgroundWorkOnAir}
+              onCheckedChange={(suspendBackgroundWorkOnAir) =>
+                void setLowResourceSettings({ suspendBackgroundWorkOnAir })
+              }
+            />
+          </label>
         </div>
       </div>
 

@@ -9,6 +9,7 @@ import {
   Palette,
   PlayCircle,
   Plug,
+  RefreshCw,
   Settings,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -19,6 +20,7 @@ const settingsNavKeys = [
   { labelKey: "settings.crossfades" as const, path: "/app/settings/crossfades", icon: AudioWaveform },
   { labelKey: "settings.input" as const, path: "/app/settings/input", icon: Mic2 },
   { labelKey: "settings.integrations" as const, path: "/app/settings/integrations", icon: Plug },
+  { labelKey: "settings.updates" as const, path: "/app/settings/updates", icon: RefreshCw },
   { labelKey: "settings.appearance" as const, path: "/app/settings/appearance", icon: Palette },
 ] as const;
 

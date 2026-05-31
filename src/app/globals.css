@@ -368,3 +368,24 @@
   background: hsl(0 0% 0% / 0.04);
   border-color: rgb(0 0 0 / 0.1);
 }
+
+[data-simple-surfaces="true"] .glass,
+[data-simple-surfaces="true"] .glass-strong {
+  background: hsl(var(--surface-2));
+  border-color: hsl(var(--border));
+  backdrop-filter: none;
+}
+
+[data-simple-surfaces="true"] .glow-green,
+[data-simple-surfaces="true"] .glow-sm {
+  box-shadow: none;
+}
+
+[data-reduce-motion="true"] *,
+[data-reduce-motion="true"] *::before,
+[data-reduce-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0.001ms !important;
+}

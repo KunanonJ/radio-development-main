@@ -1,4 +1,4 @@
-# Product Requirements Document — Sonic Bloom (Next.js + Firebase)
+# Product Requirements Document — Urban Radio Web Mode (Next.js + Firebase)
 
 **Document status:** Draft  
 **Stack (target):** Frontend — Next.js, shadcn/ui, Tailwind CSS. Backend — Firebase suite (Auth, Firestore, Storage, App Hosting; Cloud Functions as needed).  
@@ -8,7 +8,7 @@
 
 ## 1. Executive summary
 
-Sonic Bloom is a **music library and playback-oriented web application**: browse artists, albums, and playlists; search; manage a queue; control playback and volume; and operate from a consistent shell (sidebar, header, player bar, global search). Today the canonical UI ships as a **Vite + React** SPA with **mock / in-memory data**; this PRD defines the **target product** when the experience is delivered on **Next.js** with **Firebase** as the real backend and hosting surface.
+Urban Radio web mode is a **music library and playback-oriented web application**: browse artists, albums, and playlists; search; manage a queue; control playback and volume; and operate from a consistent shell (sidebar, header, player bar, global search). This PRD defines the **target browser/cloud product** when the experience is delivered on **Next.js** with **Firebase** as the real backend and hosting surface.
 
 **North star:** A signed-in user sees the same information architecture and core workflows as the current app, backed by durable catalog and user data, with media served safely from Firebase Storage and optional server-side glue via Cloud Functions or Next.js Route Handlers where Firebase alone is insufficient.
 

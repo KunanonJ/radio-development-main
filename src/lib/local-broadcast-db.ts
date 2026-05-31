@@ -3,13 +3,18 @@ import type {
   CartSlotConfig,
   CrossfadeProfile,
   LocalAudioAsset,
+  LowResourceSettings,
   MicSettings,
   PlaybackRoutingSettings,
+  SoftwareUpdateSettings,
+  StreamingTarget,
 } from '@/lib/types';
 import { devLogError } from '@/lib/dev-log';
+import { isStationMode } from '@/lib/station/station-mode';
+import { createStationBroadcastRepository } from '@/lib/station/station-repository';
 
 const DB_NAME = 'sonic-bloom-local-broadcast';
-const DB_VERSION = 1;
+const DB_VERSION = 4;
 
 const STORE_ASSETS = 'assets';
 const STORE_BLOBS = 'assetBlobs';
@@ -19,6 +24,9 @@ const STORE_PROFILES = 'crossfadeProfiles';
 const STORE_PLAYBACK = 'playbackSettings';
 const STORE_MIC = 'micSettings';
 const STORE_RUNTIME = 'runtimeState';
+const STORE_LOW_RESOURCE = 'lowResourceSettings';
+const STORE_STREAMING_TARGETS = 'streamingTargets';
+const STORE_SOFTWARE_UPDATES = 'softwareUpdateSettings';
 
 type RuntimeStateRecord = {
   id: 'runtime';
@@ -33,6 +41,8 @@ type BlobRecord = {
 
 type PlaybackSettingsRecord = PlaybackRoutingSettings & { id: 'playback' };
 type MicSettingsRecord = MicSettings & { id: 'mic' };
+type LowResourceSettingsRecord = LowResourceSettings & { id: 'low-resource' };
+type SoftwareUpdateSettingsRecord = SoftwareUpdateSettings & { id: 'software-updates' };
 
 function hasIndexedDb() {
   return typeof window !== 'undefined' && 'indexedDB' in window;
@@ -86,6 +96,15 @@ async function openDb(): Promise<IDBDatabase | null> {
       }
       if (!db.objectStoreNames.contains(STORE_RUNTIME)) {
         db.createObjectStore(STORE_RUNTIME, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(STORE_LOW_RESOURCE)) {
+        db.createObjectStore(STORE_LOW_RESOURCE, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(STORE_STREAMING_TARGETS)) {
+        db.createObjectStore(STORE_STREAMING_TARGETS, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(STORE_SOFTWARE_UPDATES)) {
+        db.createObjectStore(STORE_SOFTWARE_UPDATES, { keyPath: 'id' });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -152,11 +171,18 @@ export interface LocalBroadcastRepository {
   loadPlaybackRoutingSettings: () => Promise<PlaybackRoutingSettings | null>;
   saveMicSettings: (settings: MicSettings) => Promise<void>;
   loadMicSettings: () => Promise<MicSettings | null>;
+  saveLowResourceSettings: (settings: LowResourceSettings) => Promise<void>;
+  loadLowResourceSettings: () => Promise<LowResourceSettings | null>;
+  saveStreamingTarget: (target: StreamingTarget) => Promise<void>;
+  listStreamingTargets: () => Promise<StreamingTarget[]>;
+  deleteStreamingTarget: (targetId: string) => Promise<void>;
+  saveSoftwareUpdateSettings: (settings: SoftwareUpdateSettings) => Promise<void>;
+  loadSoftwareUpdateSettings: () => Promise<SoftwareUpdateSettings | null>;
   saveRuntimeState: (state: RuntimeStateRecord) => Promise<void>;
   loadRuntimeState: () => Promise<RuntimeStateRecord | null>;
 }
 
-export const localBroadcastRepository: LocalBroadcastRepository = {
+const indexedDbBroadcastRepository: LocalBroadcastRepository = {
   async saveAssetBlob(asset, blob) {
     const { objectUrl, ...serializableAsset } = asset as LocalAudioAsset & {
       objectUrl?: string;
@@ -243,6 +269,49 @@ export const localBroadcastRepository: LocalBroadcastRepository = {
     return settings;
   },
 
+  async saveLowResourceSettings(settings) {
+    const record: LowResourceSettingsRecord = { ...settings, id: 'low-resource' };
+    await putMany(STORE_LOW_RESOURCE, [record]);
+  },
+
+  async loadLowResourceSettings() {
+    const record = await getOne<LowResourceSettingsRecord>(STORE_LOW_RESOURCE, 'low-resource');
+    if (!record) return null;
+    const { id, ...settings } = record;
+    void id;
+    return settings;
+  },
+
+  async saveStreamingTarget(target) {
+    await putMany(STORE_STREAMING_TARGETS, [target]);
+  },
+
+  async listStreamingTargets() {
+    return getAll<StreamingTarget>(STORE_STREAMING_TARGETS);
+  },
+
+  async deleteStreamingTarget(targetId) {
+    await withTransaction([STORE_STREAMING_TARGETS], 'readwrite', async (transaction) => {
+      transaction.objectStore(STORE_STREAMING_TARGETS).delete(targetId);
+    });
+  },
+
+  async saveSoftwareUpdateSettings(settings) {
+    const record: SoftwareUpdateSettingsRecord = { ...settings, id: 'software-updates' };
+    await putMany(STORE_SOFTWARE_UPDATES, [record]);
+  },
+
+  async loadSoftwareUpdateSettings() {
+    const record = await getOne<SoftwareUpdateSettingsRecord>(
+      STORE_SOFTWARE_UPDATES,
+      'software-updates',
+    );
+    if (!record) return null;
+    const { id, ...settings } = record;
+    void id;
+    return settings;
+  },
+
   async saveRuntimeState(state) {
     await putMany(STORE_RUNTIME, [state]);
   },
@@ -250,4 +319,42 @@ export const localBroadcastRepository: LocalBroadcastRepository = {
   async loadRuntimeState() {
     return getOne<RuntimeStateRecord>(STORE_RUNTIME, 'runtime');
   },
+};
+
+let stationBroadcastRepository: LocalBroadcastRepository | null = null;
+
+function activeBroadcastRepository(): LocalBroadcastRepository {
+  if (!isStationMode()) return indexedDbBroadcastRepository;
+  stationBroadcastRepository ??= createStationBroadcastRepository();
+  return stationBroadcastRepository;
+}
+
+export const localBroadcastRepository: LocalBroadcastRepository = {
+  saveAssetBlob: (...args) => activeBroadcastRepository().saveAssetBlob(...args),
+  listAssets: () => activeBroadcastRepository().listAssets(),
+  loadAssetBlob: (...args) => activeBroadcastRepository().loadAssetBlob(...args),
+  deleteAsset: (...args) => activeBroadcastRepository().deleteAsset(...args),
+  saveCartConfig: (...args) => activeBroadcastRepository().saveCartConfig(...args),
+  loadCartConfig: () => activeBroadcastRepository().loadCartConfig(),
+  saveSchedulerEvent: (...args) => activeBroadcastRepository().saveSchedulerEvent(...args),
+  listSchedulerEvents: () => activeBroadcastRepository().listSchedulerEvents(),
+  deleteSchedulerEvent: (...args) => activeBroadcastRepository().deleteSchedulerEvent(...args),
+  saveCrossfadeProfiles: (...args) => activeBroadcastRepository().saveCrossfadeProfiles(...args),
+  loadCrossfadeProfiles: () => activeBroadcastRepository().loadCrossfadeProfiles(),
+  savePlaybackRoutingSettings: (...args) =>
+    activeBroadcastRepository().savePlaybackRoutingSettings(...args),
+  loadPlaybackRoutingSettings: () => activeBroadcastRepository().loadPlaybackRoutingSettings(),
+  saveMicSettings: (...args) => activeBroadcastRepository().saveMicSettings(...args),
+  loadMicSettings: () => activeBroadcastRepository().loadMicSettings(),
+  saveLowResourceSettings: (...args) =>
+    activeBroadcastRepository().saveLowResourceSettings(...args),
+  loadLowResourceSettings: () => activeBroadcastRepository().loadLowResourceSettings(),
+  saveStreamingTarget: (...args) => activeBroadcastRepository().saveStreamingTarget(...args),
+  listStreamingTargets: () => activeBroadcastRepository().listStreamingTargets(),
+  deleteStreamingTarget: (...args) => activeBroadcastRepository().deleteStreamingTarget(...args),
+  saveSoftwareUpdateSettings: (...args) =>
+    activeBroadcastRepository().saveSoftwareUpdateSettings(...args),
+  loadSoftwareUpdateSettings: () => activeBroadcastRepository().loadSoftwareUpdateSettings(),
+  saveRuntimeState: (...args) => activeBroadcastRepository().saveRuntimeState(...args),
+  loadRuntimeState: () => activeBroadcastRepository().loadRuntimeState(),
 };

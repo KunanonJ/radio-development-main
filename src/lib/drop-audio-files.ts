@@ -1,18 +1,5 @@
-const AUDIO_EXTENSIONS = new Set([
-  'mp3',
-  'wav',
-  'aac',
-  'm4a',
-  'ogg',
-  'opus',
-  'webm',
-]);
-
-function isAudioFile(file: File) {
-  if (file.type.startsWith('audio/')) return true;
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  return ext != null && AUDIO_EXTENSIONS.has(ext);
-}
+import type { DragEvent as ReactDragEvent } from 'react';
+import { isSupportedAudioFile } from '@/lib/audio-formats';
 
 type EntryWithChildren = FileSystemEntry & {
   createReader?: () => FileSystemDirectoryReader;
@@ -23,7 +10,7 @@ async function readEntry(entry: EntryWithChildren): Promise<File[]> {
   if (entry.isFile && typeof entry.file === 'function') {
     return new Promise<File[]>((resolve, reject) => {
       entry.file!(
-        (file) => resolve(isAudioFile(file) ? [file] : []),
+        (file) => resolve(isSupportedAudioFile(file) ? [file] : []),
         (error) => reject(error),
       );
     });
@@ -56,7 +43,7 @@ export async function extractAudioFilesFromDrop(event: DragEvent | ReactDragEven
   const { dataTransfer } = nativeEvent;
   if (!dataTransfer) return [];
 
-  const directFiles = Array.from(dataTransfer.files).filter(isAudioFile);
+  const directFiles = Array.from(dataTransfer.files).filter(isSupportedAudioFile);
   if (directFiles.length > 0) return directFiles;
 
   const items = Array.from(dataTransfer.items ?? []);
@@ -66,6 +53,5 @@ export async function extractAudioFilesFromDrop(event: DragEvent | ReactDragEven
     if (!entry) continue;
     collected.push(...(await readEntry(entry as EntryWithChildren)));
   }
-  return collected.filter(isAudioFile);
+  return collected.filter(isSupportedAudioFile);
 }
-import type { DragEvent as ReactDragEvent } from 'react';

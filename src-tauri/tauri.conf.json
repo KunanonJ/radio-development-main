@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Urban Radio Station",
+  "version": "0.1.0",
+  "identifier": "com.urbanradio.station",
+  "build": {
+    "beforeDevCommand": "npm run station:web:dev",
+    "devUrl": "http://localhost:3000",
+    "beforeBuildCommand": "npm run station:web:build",
+    "frontendDist": "../out"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "Urban Radio Station",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1180,
+        "minHeight": 760,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "offlineInstaller"
+      },
+      "nsis": {
+        "installMode": "both"
+      }
+    }
+  }
+}
