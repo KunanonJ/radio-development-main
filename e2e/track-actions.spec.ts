@@ -3,7 +3,10 @@ import { expect, test } from '@playwright/test';
 test.describe('Track actions menu', () => {
   test('adds a track to the queue from the row actions menu', async ({ page }) => {
     await page.goto('/app/queue');
-    const initialQueueCount = await page.getByTestId('queue-list').locator(':scope > div').count();
+    await expect(page.getByTestId('queue-list')).toBeVisible();
+    const initialRows = page.getByTestId('queue-list').locator(':scope > div');
+    await expect.poll(() => initialRows.count()).toBeGreaterThan(0);
+    const initialQueueCount = await initialRows.count();
 
     await page.locator('a[href="/app/library/tracks"]').first().click();
     await expect(page).toHaveURL(/\/app\/library\/tracks$/);

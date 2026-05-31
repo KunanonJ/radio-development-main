@@ -1,6 +1,7 @@
 "use client";
 import { usePlayerStore } from '@/lib/store';
 import { Radio } from 'lucide-react';
+import { ArtworkImage, ArtworkImageFill } from '@/components/ArtworkImage';
 
 export default function NowPlayingPage() {
   const { currentTrack, setFullscreenPlayer } = usePlayerStore();
@@ -24,11 +25,22 @@ export default function NowPlayingPage() {
         className="w-full surface-2 border border-border rounded-xl overflow-hidden hover:border-primary/20 transition-colors group"
       >
         <div className="relative h-[400px]">
-          <img src={currentTrack.artwork} alt="" className="w-full h-full object-cover opacity-40 blur-[40px] scale-110" />
+          <ArtworkImageFill
+            src={currentTrack.artwork}
+            alt=""
+            sizes="100vw"
+            className="object-cover opacity-40 blur-[40px] scale-110"
+          />
           <div className="absolute inset-0 bg-background/50" />
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <img src={currentTrack.artwork} alt="" className="w-48 h-48 rounded-xl mx-auto shadow-2xl mb-6" />
+              <ArtworkImage
+                src={currentTrack.artwork}
+                alt=""
+                width={192}
+                height={192}
+                className="w-48 h-48 rounded-xl mx-auto shadow-2xl mb-6"
+              />
               <h2 className="text-2xl font-bold text-foreground">{currentTrack.title}</h2>
               <p className="text-muted-foreground mt-1">{currentTrack.artist}</p>
               <p className="text-sm text-primary mt-4 opacity-0 group-hover:opacity-100 transition-opacity">Click to expand fullscreen</p>

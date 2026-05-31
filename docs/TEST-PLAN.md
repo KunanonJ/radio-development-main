@@ -1,4 +1,4 @@
-# Test plan — Sonic Bloom
+# Test plan — Urban Radio Management Software
 
 This document describes how the app is tested: unit/integration (Vitest), end-to-end (Playwright), environments, and what is intentionally out of scope.
 

@@ -203,6 +203,7 @@
     "crossfades": "Crossfades",
     "input": "Input",
     "appearance": "Appearance",
+    "updates": "Updates",
     "musicSources": "Music Sources",
     "comingSoon": "Coming soon",
     "integrationsMock": "Connect is a mock OAuth flow — status is stored locally for UI demos. Apple Music, Spotify, Plex, and YouTube Music are coming soon.",

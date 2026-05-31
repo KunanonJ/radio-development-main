@@ -186,7 +186,8 @@ function RuleCard({
   };
 
   const patchFromDraft = (): Partial<Omit<SpotRule, 'id'>> => {
-    const { id: _id, ...rest } = draft;
+    const { id, ...rest } = draft;
+    void id;
     return rest;
   };
 

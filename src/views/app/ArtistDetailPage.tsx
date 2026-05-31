@@ -6,6 +6,7 @@ import { TrackRow } from '@/components/TrackRow';
 import { AlbumCard } from '@/components/AlbumCard';
 import { ArtistCard } from '@/components/ArtistCard';
 import { Play } from 'lucide-react';
+import { ArtworkImageFill } from '@/components/ArtworkImage';
 import { usePlayerStore } from '@/lib/store';
 
 export default function ArtistDetailPage() {
@@ -24,7 +25,12 @@ export default function ArtistDetailPage() {
     <div className="app-page">
       {/* Hero */}
       <div className="relative h-64 rounded-2xl overflow-hidden mb-8">
-        <img src={artist.artwork} alt="" className="w-full h-full object-cover" />
+        <ArtworkImageFill
+          src={artist.artwork}
+          alt=""
+          sizes="(max-width: 1280px) 100vw, 896px"
+          className="object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="absolute bottom-6 left-6">
           <h1 className="text-4xl font-bold text-foreground">{artist.name}</h1>

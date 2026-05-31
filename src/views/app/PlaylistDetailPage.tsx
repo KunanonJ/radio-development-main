@@ -7,6 +7,7 @@ import { TrackRow } from '@/components/TrackRow';
 import { usePlayerStore } from '@/lib/store';
 import { Play, Shuffle, Clock } from 'lucide-react';
 import { formatDurationLong } from '@/lib/format';
+import { ArtworkImage } from '@/components/ArtworkImage';
 
 export default function PlaylistDetailPage() {
   const params = useParams();
@@ -19,7 +20,14 @@ export default function PlaylistDetailPage() {
     <div className="app-page">
       {/* Hero */}
       <div className="flex gap-8 mb-8">
-        <img src={playlist.artwork} alt={playlist.title} className="w-56 h-56 rounded-xl object-cover shadow-2xl" />
+        <ArtworkImage
+          src={playlist.artwork}
+          alt={playlist.title}
+          width={224}
+          height={224}
+          className="w-56 h-56 rounded-xl object-cover shadow-2xl"
+          priority
+        />
         <div className="flex flex-col justify-end">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Playlist</p>
           <h1 className="text-4xl font-bold text-foreground">{playlist.title}</h1>

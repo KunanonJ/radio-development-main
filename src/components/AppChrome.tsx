@@ -17,16 +17,20 @@ import { PlaybackRecoveryBridge } from "@/components/PlaybackRecoveryBridge";
 import { PlayerBar } from "@/components/PlayerBar";
 import { SchedulerBridge } from "@/components/SchedulerBridge";
 import { SidebarWidthBridge } from "@/components/SidebarWidthBridge";
+import { StationRuntimeBridge } from "@/components/station/StationRuntimeBridge";
 import { Button } from "@/components/ui/button";
 import { useAuthStore, isAuthRequired } from "@/lib/auth-store";
+import { isStationMode } from "@/lib/station/station-mode";
 import { usePlayerStore } from "@/lib/store";
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
+  const stationMode = isStationMode();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const router = useRouter();
   const hydrated = useLocalBroadcastStore((s) => s.hydrated);
   const hydrating = useLocalBroadcastStore((s) => s.hydrating);
   const hydrate = useLocalBroadcastStore((s) => s.hydrate);
+  const lowResourceSettings = useLocalBroadcastStore((s) => s.lowResourceSettings);
   const setSearchOpen = usePlayerStore((s) => s.setSearchOpen);
   const isFullscreenPlayer = usePlayerStore((s) => s.isFullscreenPlayer);
   const { username, logout } = useAuthStore();
@@ -49,10 +53,25 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-background">
-      <PlaybackEngine />
-      <PlaybackRecoveryBridge />
-      <SchedulerBridge />
+    <div
+      className="min-h-[100dvh] bg-background"
+      data-low-resource={lowResourceSettings.enabled ? "true" : undefined}
+      data-reduce-motion={
+        lowResourceSettings.enabled && lowResourceSettings.reduceMotion ? "true" : undefined
+      }
+      data-simple-surfaces={
+        lowResourceSettings.enabled && lowResourceSettings.simpleSurfaces ? "true" : undefined
+      }
+    >
+      {stationMode ? (
+        <StationRuntimeBridge />
+      ) : (
+        <>
+          <PlaybackEngine />
+          <PlaybackRecoveryBridge />
+          <SchedulerBridge />
+        </>
+      )}
       <BroadcastMetadataBridge />
       <CartHotkeysBridge />
       <GlobalSearch />

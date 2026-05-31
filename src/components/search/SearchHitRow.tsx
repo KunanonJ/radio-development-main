@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { Megaphone, MoreHorizontal, Pause, Play } from 'lucide-react';
 import type { Track } from '@/lib/types';
 import type { SpotRule } from '@/lib/spot-schedule-engine';
+import { ArtworkImage } from '@/components/ArtworkImage';
 
 type Variant = 'table' | 'compact';
 
@@ -41,7 +42,7 @@ function TrackHitRow({ track, index, variant }: { track: Track; index: number; v
         </button>
       </td>
       <td className="w-11 px-1 py-2 align-middle">
-        <img src={track.artwork} alt="" className="w-9 h-9 rounded object-cover" loading="lazy" />
+        <ArtworkImage src={track.artwork} alt="" width={36} height={36} className="w-9 h-9 rounded object-cover" />
       </td>
       <td className="min-w-0 px-2 py-2 align-middle">
         <p className={cn('text-sm truncate font-medium', isActive ? 'text-primary' : 'text-foreground')}>{track.title}</p>
@@ -136,7 +137,7 @@ export function SearchHitCompactRow({ hit, onPick }: { hit: SearchHit; onPick: (
           onPick();
         }}
       >
-        <img src={tr.artwork} alt="" className="w-9 h-9 rounded object-cover shrink-0" />
+        <ArtworkImage src={tr.artwork} alt="" width={36} height={36} className="w-9 h-9 rounded object-cover shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="text-sm text-foreground truncate">{tr.title}</p>
           <p className="text-xs text-muted-foreground truncate">{tr.artist}</p>

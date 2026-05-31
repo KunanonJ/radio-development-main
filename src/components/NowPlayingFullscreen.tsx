@@ -4,6 +4,7 @@ import { usePlayerStore } from '@/lib/store';
 import { formatDuration } from '@/lib/format';
 import { X, Play, Pause, SkipBack, SkipForward, Repeat, Repeat1, Shuffle, Volume2, VolumeX, ListMusic } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { ArtworkImage, ArtworkImageFill } from '@/components/ArtworkImage';
 
 export function NowPlayingFullscreen() {
   const {
@@ -25,7 +26,12 @@ export function NowPlayingFullscreen() {
     >
       {/* Background blur artwork */}
       <div className="absolute inset-0 overflow-hidden">
-        <img src={currentTrack.artwork} alt="" className="w-full h-full object-cover opacity-20 blur-[80px] scale-150" />
+        <ArtworkImageFill
+          src={currentTrack.artwork}
+          alt=""
+          sizes="100vw"
+          className="object-cover opacity-20 blur-[80px] scale-150"
+        />
         <div className="absolute inset-0 bg-background/70" />
       </div>
 
@@ -46,7 +52,13 @@ export function NowPlayingFullscreen() {
           transition={{ duration: 0.4 }}
           className="w-[400px] h-[400px] rounded-2xl overflow-hidden shadow-2xl flex-shrink-0"
         >
-          <img src={currentTrack.artwork} alt="" className="w-full h-full object-cover" />
+          <ArtworkImage
+            src={currentTrack.artwork}
+            alt=""
+            width={400}
+            height={400}
+            className="w-full h-full object-cover"
+          />
         </motion.div>
 
         {/* Info + Controls */}
@@ -116,7 +128,7 @@ export function NowPlayingFullscreen() {
             <div className="space-y-2">
               {queue.slice(queueIndex + 1, queueIndex + 4).map((t) => (
                 <div key={t.id} className="flex items-center gap-3">
-                  <img src={t.artwork} alt="" className="w-8 h-8 rounded object-cover" />
+                  <ArtworkImage src={t.artwork} alt="" width={32} height={32} className="w-8 h-8 rounded object-cover" />
                   <div className="min-w-0">
                     <p className="text-sm text-foreground truncate">{t.title}</p>
                     <p className="text-xs text-muted-foreground truncate">{t.artist}</p>

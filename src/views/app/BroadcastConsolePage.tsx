@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SortableQueueList } from "@/components/queue/SortableQueueList";
 import { extractAudioFilesFromDrop } from "@/lib/drop-audio-files";
+import { SUPPORTED_AUDIO_ACCEPT } from "@/lib/audio-formats";
 import { sortedEventsByNextRun } from "@/lib/broadcast-scheduler";
 import { useLocalBroadcastStore } from "@/lib/local-broadcast-store";
 import { formatDuration } from "@/lib/format";
@@ -422,7 +423,7 @@ export default function BroadcastConsolePage() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="audio/*,.mp3,.wav,.aac,.m4a,.ogg,.opus,.webm"
+        accept={SUPPORTED_AUDIO_ACCEPT}
         multiple
         className="hidden"
         onChange={async (event) => {

@@ -9,6 +9,7 @@ import { SearchHitCompactRow } from '@/components/search/SearchHitRow';
 import { Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { ArtworkImage } from '@/components/ArtworkImage';
 
 const TOP_RESULTS_LIMIT = 5;
 
@@ -127,7 +128,7 @@ export function GlobalSearch() {
                       onClick={() => go(`/app/library/tracks`)}
                       className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary transition-colors"
                     >
-                      <img src={tr.artwork} alt="" className="w-8 h-8 rounded object-cover" />
+                      <ArtworkImage src={tr.artwork} alt="" width={32} height={32} className="w-8 h-8 rounded object-cover" />
                       <div className="text-left min-w-0">
                         <p className="text-sm text-foreground truncate">{tr.title}</p>
                         <p className="text-xs text-muted-foreground truncate">{tr.artist}</p>
@@ -145,7 +146,7 @@ export function GlobalSearch() {
                       onClick={() => go(`/app/album/${a.id}`)}
                       className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary transition-colors"
                     >
-                      <img src={a.artwork} alt="" className="w-8 h-8 rounded object-cover" />
+                      <ArtworkImage src={a.artwork} alt={a.title} width={32} height={32} className="w-8 h-8 rounded object-cover" />
                       <div className="text-left min-w-0">
                         <p className="text-sm text-foreground truncate">{a.title}</p>
                         <p className="text-xs text-muted-foreground truncate">{a.artist}</p>

@@ -203,6 +203,7 @@
     "crossfades": "ครอสเฟด",
     "input": "อินพุต",
     "appearance": "รูปลักษณ์",
+    "updates": "อัปเดต",
     "musicSources": "แหล่งเพลง",
     "comingSoon": "เร็วๆ นี้",
     "integrationsMock": "การเชื่อมต่อเป็นแบบจำลอง — สถานะเก็บในเครื่องเพื่อสาธิต UI Apple Music Spotify Plex และ YouTube Music จะเปิดใช้เร็วๆ นี้",

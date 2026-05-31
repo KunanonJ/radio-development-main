@@ -5,8 +5,10 @@ import type { Track } from '@/lib/types';
 export const CLOUD_ARTWORK =
   'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&h=300&fit=crop';
 
-function stripMediaUrl(t: Track): Track {
-  const { mediaUrl: _, ...rest } = t;
+/** Persisted cloud tracks omit session `mediaUrl` (object URLs are not restorable). */
+function stripMediaUrl(t: Track): Omit<Track, "mediaUrl"> {
+  const { mediaUrl, ...rest } = t;
+  void mediaUrl;
   return rest;
 }
 
@@ -102,7 +104,8 @@ export const useCloudLibraryStore = create<CloudLibraryState>()(
         set((s) => {
           const url = s.sessionMediaUrls[id];
           if (url) URL.revokeObjectURL(url);
-          const { [id]: _, ...restUrls } = s.sessionMediaUrls;
+          const { [id]: removed, ...restUrls } = s.sessionMediaUrls;
+          void removed;
           return {
             tracks: s.tracks.filter((t) => t.id !== id),
             sessionMediaUrls: restUrls,

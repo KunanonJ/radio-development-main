@@ -7,11 +7,21 @@ import type {
   CartSlotConfig,
   CrossfadeProfile,
   LocalAudioAsset,
+  LowResourceSettings,
   MicSettings,
   PlaybackRoutingSettings,
+  SoftwareUpdateSettings,
+  StreamingTarget,
   Track,
 } from '@/lib/types';
 import { usePlayerStore } from '@/lib/store';
+import { devLogError } from '@/lib/dev-log';
+import { createStationClient, getTauriStationAdapter } from '@/lib/station/station-client';
+import { isStationMode } from '@/lib/station/station-mode';
+import {
+  checkStationSoftwareUpdate,
+  installStationSoftwareUpdate,
+} from '@/lib/station/software-updater';
 
 const LOCAL_ARTWORK = '/placeholder.svg';
 const CART_COLORS = [
@@ -73,6 +83,9 @@ type LocalBroadcastState = {
   crossfadeProfiles: Record<AudioClass, CrossfadeProfile>;
   playbackSettings: PlaybackRoutingSettings;
   micSettings: MicSettings;
+  lowResourceSettings: LowResourceSettings;
+  streamingTargets: StreamingTarget[];
+  softwareUpdateSettings: SoftwareUpdateSettings;
   runtime: BroadcastRuntimeState;
   availableInputDevices: InputDeviceOption[];
   canEnumerateDevices: boolean;
@@ -100,6 +113,12 @@ type LocalBroadcastState = {
   setCrossfadeProfile: (audioClass: AudioClass, patch: Partial<CrossfadeProfile>) => Promise<void>;
   setPlaybackSettings: (patch: Partial<PlaybackRoutingSettings>) => Promise<void>;
   setMicSettings: (patch: Partial<MicSettings>) => Promise<void>;
+  setLowResourceSettings: (patch: Partial<LowResourceSettings>) => Promise<void>;
+  saveStreamingTarget: (target: StreamingTarget) => Promise<void>;
+  removeStreamingTarget: (targetId: string) => Promise<void>;
+  setSoftwareUpdateSettings: (patch: Partial<SoftwareUpdateSettings>) => Promise<void>;
+  checkForSoftwareUpdate: (options?: { installIfAvailable?: boolean }) => Promise<void>;
+  installSoftwareUpdate: () => Promise<void>;
   refreshInputDevices: () => Promise<void>;
   setMicPermission: (permission: MicPermissionState, error?: string | null) => void;
   setMicLevel: (level: number) => void;
@@ -163,8 +182,38 @@ function defaultMicSettings(): MicSettings {
   };
 }
 
+function defaultLowResourceSettings(): LowResourceSettings {
+  return {
+    enabled: false,
+    reduceMotion: true,
+    simpleSurfaces: true,
+    vuFps: 15,
+    importBatchSize: 8,
+    skipImportDurationScan: false,
+    stableAudioBufferFrames: 1024,
+    suspendBackgroundWorkOnAir: true,
+  };
+}
+
+function defaultSoftwareUpdateSettings(): SoftwareUpdateSettings {
+  return {
+    autoCheckEnabled: false,
+    autoDownloadAndInstall: false,
+    channel: 'stable',
+    lastCheckedAt: null,
+    lastAvailableVersion: null,
+    lastInstalledVersion: null,
+    status: 'idle',
+    lastError: null,
+  };
+}
+
 function defaultRuntime(): BroadcastRuntimeState {
   return { pendingEventIds: [], lastFiredKeys: {} };
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => globalThis.setTimeout(resolve, ms));
 }
 
 function baseTrackFromAsset(asset: LocalAssetWithUrl): Track {
@@ -271,6 +320,9 @@ export const useLocalBroadcastStore = create<LocalBroadcastState>((set, get) => 
   crossfadeProfiles: defaultCrossfadeProfiles(),
   playbackSettings: defaultPlaybackSettings(),
   micSettings: defaultMicSettings(),
+  lowResourceSettings: defaultLowResourceSettings(),
+  streamingTargets: [],
+  softwareUpdateSettings: defaultSoftwareUpdateSettings(),
   runtime: defaultRuntime(),
   availableInputDevices: [],
   canEnumerateDevices: true,
@@ -289,16 +341,29 @@ export const useLocalBroadcastStore = create<LocalBroadcastState>((set, get) => 
     set({ hydrating: true, hydrateError: null });
 
     try {
-      const [assets, cartSlots, schedulerEvents, profileList, playbackSettings, micSettings, runtime] =
-        await Promise.all([
-          localBroadcastRepository.listAssets(),
-          localBroadcastRepository.loadCartConfig(),
-          localBroadcastRepository.listSchedulerEvents(),
-          localBroadcastRepository.loadCrossfadeProfiles(),
-          localBroadcastRepository.loadPlaybackRoutingSettings(),
-          localBroadcastRepository.loadMicSettings(),
-          localBroadcastRepository.loadRuntimeState(),
-        ]);
+      const [
+        assets,
+        cartSlots,
+        schedulerEvents,
+        profileList,
+        playbackSettings,
+        micSettings,
+        lowResourceSettings,
+        streamingTargets,
+        softwareUpdateSettings,
+        runtime,
+      ] = await Promise.all([
+        localBroadcastRepository.listAssets(),
+        localBroadcastRepository.loadCartConfig(),
+        localBroadcastRepository.listSchedulerEvents(),
+        localBroadcastRepository.loadCrossfadeProfiles(),
+        localBroadcastRepository.loadPlaybackRoutingSettings(),
+        localBroadcastRepository.loadMicSettings(),
+        localBroadcastRepository.loadLowResourceSettings(),
+        localBroadcastRepository.listStreamingTargets(),
+        localBroadcastRepository.loadSoftwareUpdateSettings(),
+        localBroadcastRepository.loadRuntimeState(),
+      ]);
 
       const assetsWithUrls = await recreateAssetsWithUrls(assets);
       const nextCartSlots = cartSlots.length > 0 ? cartSlots.sort((a, b) => a.slotIndex - b.slotIndex) : defaultCartSlots();
@@ -308,9 +373,17 @@ export const useLocalBroadcastStore = create<LocalBroadcastState>((set, get) => 
       }
       const nextPlayback = playbackSettings ?? defaultPlaybackSettings();
       const nextMicSettings = micSettings ?? defaultMicSettings();
+      const nextLowResourceSettings = {
+        ...defaultLowResourceSettings(),
+        ...(lowResourceSettings ?? {}),
+      };
       const nextRuntime = runtime
         ? { pendingEventIds: runtime.pendingEventIds, lastFiredKeys: runtime.lastFiredKeys }
         : defaultRuntime();
+      const nextSoftwareUpdateSettings = {
+        ...defaultSoftwareUpdateSettings(),
+        ...(softwareUpdateSettings ?? {}),
+      };
 
       syncPlayerVolume(nextPlayback);
       syncMusicCrossfade(nextProfiles.music);
@@ -324,6 +397,9 @@ export const useLocalBroadcastStore = create<LocalBroadcastState>((set, get) => 
           crossfadeProfiles: nextProfiles,
           playbackSettings: nextPlayback,
           micSettings: nextMicSettings,
+          lowResourceSettings: nextLowResourceSettings,
+          streamingTargets,
+          softwareUpdateSettings: nextSoftwareUpdateSettings,
           runtime: nextRuntime,
           hydrated: true,
           hydrating: false,
@@ -331,8 +407,13 @@ export const useLocalBroadcastStore = create<LocalBroadcastState>((set, get) => 
       });
 
       await get().refreshInputDevices();
+      if (nextSoftwareUpdateSettings.autoCheckEnabled && isStationMode()) {
+        void get().checkForSoftwareUpdate({
+          installIfAvailable: nextSoftwareUpdateSettings.autoDownloadAndInstall,
+        });
+      }
     } catch (error) {
-      console.error('broadcast hydrate failed', error);
+      devLogError('broadcast hydrate failed', error);
       set({
         hydrated: true,
         hydrating: false,
@@ -342,6 +423,19 @@ export const useLocalBroadcastStore = create<LocalBroadcastState>((set, get) => 
   },
 
   async importAudioFiles(files, options) {
+    const lowResource = get().lowResourceSettings;
+    if (
+      lowResource.enabled &&
+      lowResource.suspendBackgroundWorkOnAir &&
+      usePlayerStore.getState().isPlaying
+    ) {
+      return {
+        added: [],
+        errors: ['Import is paused while on-air because low-resource mode is enabled.'],
+        assetIds: [],
+      };
+    }
+
     const assetsBySignature = new Set(
       get().assets.map((asset) => `${asset.fileName}-${asset.size}-${asset.lastModified}`),
     );
@@ -351,7 +445,8 @@ export const useLocalBroadcastStore = create<LocalBroadcastState>((set, get) => 
     const errors: string[] = [];
     const audioClass = options?.audioClass ?? 'music';
 
-    for (const file of files) {
+    const batchSize = Math.max(1, Math.floor(lowResource.importBatchSize));
+    for (const [index, file] of files.entries()) {
       const signature = `${file.name}-${file.size}-${file.lastModified}`;
       if (assetsBySignature.has(signature)) {
         errors.push(`${file.name}: already imported`);
@@ -359,7 +454,9 @@ export const useLocalBroadcastStore = create<LocalBroadcastState>((set, get) => 
       }
 
       try {
-        const durationSec = await extractDuration(file);
+        const durationSec = lowResource.enabled && lowResource.skipImportDurationScan
+          ? 0
+          : await extractDuration(file);
         const id = safeUuid();
         const blobKey = `asset:${id}`;
         const objectUrl = URL.createObjectURL(file);
@@ -387,6 +484,10 @@ export const useLocalBroadcastStore = create<LocalBroadcastState>((set, get) => 
         errors.push(
           `${file.name}: ${error instanceof Error ? error.message : 'could not import file'}`,
         );
+      }
+
+      if (lowResource.enabled && (index + 1) % batchSize === 0) {
+        await sleep(0);
       }
     }
 
@@ -535,7 +636,155 @@ export const useLocalBroadcastStore = create<LocalBroadcastState>((set, get) => 
     set({ micSettings: nextSettings });
   },
 
+  async setLowResourceSettings(patch) {
+    const nextSettings = { ...get().lowResourceSettings, ...patch };
+    await localBroadcastRepository.saveLowResourceSettings(nextSettings);
+    set({ lowResourceSettings: nextSettings });
+  },
+
+  async saveStreamingTarget(target) {
+    const nextTarget = { ...target, updatedAt: new Date().toISOString() };
+    await localBroadcastRepository.saveStreamingTarget(nextTarget);
+    set((state) => ({
+      streamingTargets: [
+        ...state.streamingTargets.filter((item) => item.id !== nextTarget.id),
+        nextTarget,
+      ].sort((a, b) => a.name.localeCompare(b.name)),
+    }));
+  },
+
+  async removeStreamingTarget(targetId) {
+    await localBroadcastRepository.deleteStreamingTarget(targetId);
+    set((state) => ({
+      streamingTargets: state.streamingTargets.filter((target) => target.id !== targetId),
+    }));
+  },
+
+  async setSoftwareUpdateSettings(patch) {
+    const nextSettings = { ...get().softwareUpdateSettings, ...patch };
+    await localBroadcastRepository.saveSoftwareUpdateSettings(nextSettings);
+    set({ softwareUpdateSettings: nextSettings });
+  },
+
+  async checkForSoftwareUpdate(options) {
+    const current = get().softwareUpdateSettings;
+    const checking: SoftwareUpdateSettings = {
+      ...current,
+      status: 'checking',
+      lastError: null,
+    };
+    await localBroadcastRepository.saveSoftwareUpdateSettings(checking);
+    set({ softwareUpdateSettings: checking });
+
+    try {
+      const result = await checkStationSoftwareUpdate(current.channel);
+      const checkedAt = new Date().toISOString();
+      const nextSettings: SoftwareUpdateSettings = result.available
+        ? {
+            ...checking,
+            status: 'available',
+            lastCheckedAt: checkedAt,
+            lastAvailableVersion: result.version,
+            lastInstalledVersion: null,
+            lastError: null,
+          }
+        : {
+            ...checking,
+            status: result.reason === 'unavailable' ? 'unavailable' : 'up-to-date',
+            lastCheckedAt: checkedAt,
+            lastAvailableVersion: null,
+            lastError:
+              result.reason === 'unavailable'
+                ? 'Software updates are only available in the Windows station app.'
+                : null,
+          };
+      await localBroadcastRepository.saveSoftwareUpdateSettings(nextSettings);
+      set({ softwareUpdateSettings: nextSettings });
+
+      if (
+        result.available &&
+        options?.installIfAvailable &&
+        !usePlayerStore.getState().isPlaying
+      ) {
+        await get().installSoftwareUpdate();
+      }
+    } catch (error) {
+      const failed: SoftwareUpdateSettings = {
+        ...checking,
+        status: 'error',
+        lastCheckedAt: new Date().toISOString(),
+        lastError: error instanceof Error ? error.message : 'Update check failed',
+      };
+      await localBroadcastRepository.saveSoftwareUpdateSettings(failed);
+      set({ softwareUpdateSettings: failed });
+    }
+  },
+
+  async installSoftwareUpdate() {
+    const current = get().softwareUpdateSettings;
+    if (usePlayerStore.getState().isPlaying) {
+      const blocked: SoftwareUpdateSettings = {
+        ...current,
+        status: 'error',
+        lastError: 'Stop program audio before installing a software update.',
+      };
+      await localBroadcastRepository.saveSoftwareUpdateSettings(blocked);
+      set({ softwareUpdateSettings: blocked });
+      return;
+    }
+
+    const downloading: SoftwareUpdateSettings = {
+      ...current,
+      status: 'downloading',
+      lastError: null,
+    };
+    await localBroadcastRepository.saveSoftwareUpdateSettings(downloading);
+    set({ softwareUpdateSettings: downloading });
+
+    try {
+      await installStationSoftwareUpdate(current.channel);
+      const ready: SoftwareUpdateSettings = {
+        ...downloading,
+        status: 'ready-to-restart',
+        lastInstalledVersion: current.lastAvailableVersion,
+        lastError: null,
+      };
+      await localBroadcastRepository.saveSoftwareUpdateSettings(ready);
+      set({ softwareUpdateSettings: ready });
+    } catch (error) {
+      const failed: SoftwareUpdateSettings = {
+        ...downloading,
+        status: 'error',
+        lastError: error instanceof Error ? error.message : 'Update install failed',
+      };
+      await localBroadcastRepository.saveSoftwareUpdateSettings(failed);
+      set({ softwareUpdateSettings: failed });
+    }
+  },
+
   async refreshInputDevices() {
+    if (isStationMode()) {
+      try {
+        const client = createStationClient(await getTauriStationAdapter());
+        const devices = await client.listAudioDevices();
+        set({
+          canEnumerateDevices: true,
+          availableInputDevices: devices
+            .filter((device) => device.inputChannels > 0)
+            .map((device) => ({
+              id: device.id,
+              label:
+                `${device.name} ` +
+                `(${device.host}, ${device.inputChannels} in / ${device.outputChannels} out)`,
+            })),
+        });
+      } catch (error) {
+        devLogError('station audio device enumeration failed', error);
+        set({ canEnumerateDevices: false, availableInputDevices: [] });
+      }
+      return;
+    }
+
     if (
       typeof navigator === 'undefined' ||
       !navigator.mediaDevices ||
@@ -554,7 +803,7 @@ export const useLocalBroadcastStore = create<LocalBroadcastState>((set, get) => 
         }));
       set({ canEnumerateDevices: true, availableInputDevices: inputs });
     } catch (error) {
-      console.error('enumerateDevices failed', error);
+      devLogError('enumerateDevices failed', error);
       set({
         canEnumerateDevices: false,
         availableInputDevices: [],

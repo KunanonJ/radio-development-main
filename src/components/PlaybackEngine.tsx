@@ -109,27 +109,6 @@ export function PlaybackEngine() {
     }
   }
 
-  function updateDuckGain(force = false) {
-    const graph = graphRef.current;
-    if (!graph) return;
-    const target = micLive ? dbToGain(micSettings.duckDb) : 1;
-    graph.programDuckGain.gain.cancelScheduledValues(graph.context.currentTime);
-    graph.programDuckGain.gain.setValueAtTime(graph.programDuckGain.gain.value, graph.context.currentTime);
-    graph.programDuckGain.gain.linearRampToValueAtTime(
-      target,
-      graph.context.currentTime + (force ? 0 : micLive ? 0.2 : 0.75),
-    );
-  }
-
-  function updateMonitorGain() {
-    const graph = graphRef.current;
-    if (!graph) return;
-    graph.previewOutputGain.gain.setValueAtTime(
-      playbackSettings.previewEnabled ? playbackSettings.monitorVolume : 0,
-      graph.context.currentTime,
-    );
-  }
-
   function cancelCrossfade() {
     const graph = graphRef.current;
     if (!graph) return;
@@ -288,19 +267,34 @@ export function PlaybackEngine() {
   }, []);
 
   useEffect(() => {
-    updateProgramGain(true);
     const graph = graphRef.current;
-    if (graph) {
-      graph.cartOutputGain.gain.setValueAtTime(effectiveProgramVolume, graph.context.currentTime);
-    }
+    if (!graph) return;
+    graph.programOutputGain.gain.setValueAtTime(
+      effectiveProgramVolume,
+      graph.context.currentTime,
+    );
+    graph.cartOutputGain.gain.setValueAtTime(effectiveProgramVolume, graph.context.currentTime);
   }, [effectiveProgramVolume]);
 
   useEffect(() => {
-    updateMonitorGain();
+    const graph = graphRef.current;
+    if (!graph) return;
+    graph.previewOutputGain.gain.setValueAtTime(
+      playbackSettings.previewEnabled ? playbackSettings.monitorVolume : 0,
+      graph.context.currentTime,
+    );
   }, [playbackSettings.monitorVolume, playbackSettings.previewEnabled]);
 
   useEffect(() => {
-    updateDuckGain();
+    const graph = graphRef.current;
+    if (!graph) return;
+    const target = micLive ? dbToGain(micSettings.duckDb) : 1;
+    graph.programDuckGain.gain.cancelScheduledValues(graph.context.currentTime);
+    graph.programDuckGain.gain.setValueAtTime(graph.programDuckGain.gain.value, graph.context.currentTime);
+    graph.programDuckGain.gain.linearRampToValueAtTime(
+      target,
+      graph.context.currentTime + (micLive ? 0.2 : 0.75),
+    );
   }, [micLive, micSettings.duckDb]);
 
   useEffect(() => {
@@ -361,6 +355,7 @@ export function PlaybackEngine() {
     return () => {
       cancelled = true;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Web Audio graph lifecycle; ensureContext intentionally omitted
   }, [micSettings.enabled, micSettings.inputDeviceId, micSettings.preferredSampleRate]);
 
   useEffect(() => {
@@ -444,6 +439,7 @@ export function PlaybackEngine() {
     element.src = mediaUrl;
     element.preload = 'metadata';
     element.load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deck load; refs + partial track identity deps only
   }, [currentTrack?.id, mediaUrl]);
 
   useEffect(() => {
@@ -457,6 +453,7 @@ export function PlaybackEngine() {
     } else {
       element.pause();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- play/pause; resumeContext via audio element graph
   }, [isPlaying, mediaUrl, currentTrack?.id]);
 
   useEffect(() => {
@@ -470,6 +467,7 @@ export function PlaybackEngine() {
     if (Math.abs(element.currentTime - target) > 0.25) {
       element.currentTime = target;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seek sync; duration from element or currentTrack snapshot
   }, [progress, currentTrack?.id, mediaUrl]);
 
   useEffect(() => {
@@ -616,6 +614,7 @@ export function PlaybackEngine() {
       activeElement.removeEventListener('error', onError);
       activeElement.removeEventListener('playing', onPlaying);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- active deck listeners; store fns + crossfade graph
   }, [
     advanceAfterCurrentTrackEnd,
     crossfadeProfiles,
@@ -643,6 +642,7 @@ export function PlaybackEngine() {
     void previewElement.play().catch(() => {
       useLocalBroadcastStore.getState().setAudioUnlockState('suspended');
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- preview pipe; resumeContext stable for this flow
   }, [previewRequest]);
 
   useEffect(() => {
@@ -658,6 +658,7 @@ export function PlaybackEngine() {
     void element.play().catch(() => {
       useLocalBroadcastStore.getState().setAudioUnlockState('suspended');
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- cart fire-and-forget
   }, [cartRequest]);
 
   useEffect(() => {
@@ -681,6 +682,7 @@ export function PlaybackEngine() {
       graph.deckGains.B.gain.setValueAtTime(activeDeck === 'B' ? 1 : 0, graph.context.currentTime);
       updateProgramGain(true);
     }, interruptRequest.fadeMs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- interrupt fade + ensureContext
   }, [interruptRequest]);
 
   useEffect(() => {
@@ -695,6 +697,7 @@ export function PlaybackEngine() {
       }
     }, 100);
     return () => window.clearInterval(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- mock progress ticks use store inside interval
   }, [currentTrack?.id, currentTrack?.duration, isPlaying, mediaUrl]);
 
   return null;

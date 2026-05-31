@@ -14,7 +14,13 @@ dist-ssr
 
 # Next.js
 .next/
+.next-station/
 out/
+tsconfig.tsbuildinfo
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
 
 # Cloudflare / Wrangler
 .wrangler/

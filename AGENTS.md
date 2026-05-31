@@ -1,8 +1,8 @@
-# Agent guide — Sonic Bloom (sonic-bloom-main)
+# Agent guide — Urban Radio Management Software
 
 ## Purpose
 
-Next.js 15 (App Router) + React + TypeScript: a music library and playback UI. Marketing landing at `/`; main app under `/app` with sidebar, player bar, search, and library/detail/settings routes. **`/app/dashboard`** exposes the queue **Gantt** view (`HomePage`); **`/app`** default is the broadcast console. **Data is mock/in-memory** (`src/lib/mock-data.ts`, `src/lib/store.ts`); there is no backend or real streaming integration in this repo yet.
+Next.js 15 (App Router) + React + TypeScript plus a Windows-first Tauri station runtime. Marketing landing at `/`; main app under `/app` with sidebar, player bar, search, library/detail/settings routes, and the broadcast console. **`/app/dashboard`** exposes the queue **Gantt** view (`HomePage`); **`/app`** default is the broadcast console. Browser/cloud mode keeps mock/cloud paths available. Station mode adds local SQLite/media persistence, low-resource mode, streaming target configuration, signed update settings, and a Rust station core under `src-tauri/`.
 
 ## Commands
 
@@ -85,7 +85,7 @@ Path alias: `@/` → `src/` (see `tsconfig.json`). Root TypeScript excludes **`f
 
 ## Documentation
 
-- Root **`README.md`** is still a Lovable placeholder; update it when the project is described for humans. **Do not** add extra markdown docs unless the user asks.
+- Root **`README.md`** is the public GitHub entrypoint. Keep it aligned with `docs/agent.md`, `docs/design.md`, `docs/architecture.md`, the PRD, and the pentest audit. **Do not** add extra markdown docs unless the user asks.
 
 ## Cursor / agent work rules
 

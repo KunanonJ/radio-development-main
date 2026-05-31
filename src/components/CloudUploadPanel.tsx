@@ -5,11 +5,10 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
 import type { Track } from '@/lib/types';
+import { SUPPORTED_AUDIO_ACCEPT } from '@/lib/audio-formats';
 import { useCloudLibraryStore, buildCloudTrackFromFile } from '@/lib/cloud-library-store';
 import { uploadFileToCloud } from '@/lib/cloud-upload';
 import { sha256HexFromFile } from '@/lib/file-hash';
-
-const ACCEPT = 'audio/*,.mp3,.flac,.m4a,.aac,.ogg,.opus,.wav,.webm';
 
 export function CloudUploadPanel() {
   const { t } = useTranslation();
@@ -147,7 +146,7 @@ export function CloudUploadPanel() {
         <input
           ref={inputRef}
           type="file"
-          accept={ACCEPT}
+          accept={SUPPORTED_AUDIO_ACCEPT}
           multiple
           className="hidden"
           onChange={(e) => {

@@ -8,13 +8,16 @@ import { usePlayerStore } from '@/lib/store';
 import { formatDuration } from '@/lib/format';
 import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1, Shuffle, Volume2, VolumeX, Maximize2, ListMusic, Waves } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { ArtworkImage } from '@/components/ArtworkImage';
 
 export function PlayerBar() {
   const { t } = useTranslation();
   const hydrated = useHydrated();
   const realtime = useRealtimeStationOptional();
   const remoteVuFresh =
-    realtime?.remoteVu && Date.now() - realtime.remoteVu.t < 4000;
+    hydrated &&
+    realtime?.remoteVu &&
+    Date.now() - realtime.remoteVu.t < 4000;
   const {
     currentTrack, isPlaying, progress, volume, isMuted, repeat, shuffle,
     crossfadeEnabled,
@@ -37,7 +40,14 @@ export function PlayerBar() {
             onClick={() => setFullscreenPlayer(true)}
             className="relative group flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
-            <img src={currentTrack.artwork} alt="" className="w-11 h-11 sm:w-12 sm:h-12 rounded-md object-cover" />
+            <ArtworkImage
+              src={currentTrack.artwork}
+              alt=""
+              width={48}
+              height={48}
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-md object-cover"
+              aria-hidden
+            />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center">
               <Maximize2 className="w-4 h-4 text-foreground" />
             </div>
