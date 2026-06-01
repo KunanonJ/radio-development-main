@@ -1,3 +1,4 @@
+import React from "react";
 import { act, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useLocalBroadcastStore } from "@/lib/local-broadcast-store";
